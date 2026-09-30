@@ -80,7 +80,7 @@ function PermissionRow({
 }: {
   label: string;
   allowed: boolean;
-  note?: string;
+  note?: string | undefined;
 }) {
   return (
     <div className="flex items-center justify-between">

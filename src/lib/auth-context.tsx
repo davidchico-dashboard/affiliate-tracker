@@ -20,7 +20,8 @@ import {
 } from "./supabase";
 import { getPublicSupabaseConfig } from "./supabase-config.functions";
 import type { AuthStatus, SystemRole, SystemUser } from "./types";
-import { resolveBranding, type PlatformSettings } from "./branding";
+import { resolveBranding } from "./branding";
+import type { PlatformSettings } from "./types";
 
 interface AuthContextValue {
   status: AuthStatus;

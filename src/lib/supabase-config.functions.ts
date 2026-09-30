@@ -23,8 +23,8 @@ export interface PublicSupabaseConfig {
 }
 
 export const getPublicSupabaseConfig = createServerFn({ method: "GET" }).handler(async () => {
-  const url = process.env.SUPABASE_URL ?? null;
-  const anonKey = process.env.SUPABASE_ANON_KEY ?? null;
+  const url = process.env["SUPABASE_URL"] ?? null;
+  const anonKey = process.env["SUPABASE_ANON_KEY"] ?? null;
   return {
     url,
     anonKey,

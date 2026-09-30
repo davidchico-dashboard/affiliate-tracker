@@ -3,8 +3,8 @@
  *
  * All reads/writes go through the runtime-configured browser Supabase client
  * and are enforced by Row Level Security. Role values are never trusted from
- * the client; the database is the authority. created_by is stamped with the
- * current auth uid at insert time via the Supabase client's auth session.
+ * the client; the database is the authority. created_by references the
+ * system_users profile primary key, not the Supabase Auth user ID.
  */
 
 import { getSupabaseClient } from "./supabase";
@@ -85,9 +85,9 @@ function client() {
 
 function stampCreatedBy(
   body: Record<string, unknown>,
-  uid: string | null,
+  profileId: string | null,
 ): Record<string, unknown> {
-  if (uid) body.created_by = uid;
+  if (profileId) body["created_by"] = profileId;
   return body;
 }
 
@@ -108,7 +108,7 @@ function humanizeError(err: { message: string } | null): string {
 
 export function useAffiliates() {
   const { user } = useAuth();
-  const uid = user?.auth_id ?? null;
+  const profileId = user?.id ?? null;
 
   const list = useCallback(async (opts?: { search?: string; status?: AffiliateStatus | "all" }) => {
     const sb = client();
@@ -142,26 +142,26 @@ export function useAffiliates() {
           status: input.status ?? "active",
           notes: input.notes ?? null,
         },
-        uid,
+        profileId,
       );
       const { data, error } = await sb.from("affiliates").insert(body).select().maybeSingle();
       if (error) throw new Error(humanizeError(error));
       return data as Affiliate | null;
     },
-    [uid],
+    [profileId],
   );
 
   const update = useCallback(async (id: string, patch: Partial<AffiliateInput>) => {
     const sb = client();
     const body: Record<string, unknown> = {};
-    if (patch.display_name !== undefined) body.display_name = patch.display_name.trim();
-    if (patch.legal_name !== undefined) body.legal_name = patch.legal_name;
-    if (patch.email !== undefined) body.email = patch.email;
-    if (patch.phone !== undefined) body.phone = patch.phone;
-    if (patch.company_name !== undefined) body.company_name = patch.company_name;
-    if (patch.system_user_id !== undefined) body.system_user_id = patch.system_user_id;
-    if (patch.status !== undefined) body.status = patch.status;
-    if (patch.notes !== undefined) body.notes = patch.notes;
+    if (patch.display_name !== undefined) body["display_name"] = patch.display_name.trim();
+    if (patch.legal_name !== undefined) body["legal_name"] = patch.legal_name;
+    if (patch.email !== undefined) body["email"] = patch.email;
+    if (patch.phone !== undefined) body["phone"] = patch.phone;
+    if (patch.company_name !== undefined) body["company_name"] = patch.company_name;
+    if (patch.system_user_id !== undefined) body["system_user_id"] = patch.system_user_id;
+    if (patch.status !== undefined) body["status"] = patch.status;
+    if (patch.notes !== undefined) body["notes"] = patch.notes;
     const { data, error } = await sb
       .from("affiliates")
       .update(body)
@@ -177,7 +177,7 @@ export function useAffiliates() {
 
 export function useCampaigns() {
   const { user } = useAuth();
-  const uid = user?.auth_id ?? null;
+  const profileId = user?.id ?? null;
 
   const list = useCallback(async (opts?: { search?: string; status?: CampaignStatus | "all" }) => {
     const sb = client();
@@ -218,13 +218,13 @@ export function useCampaigns() {
           default_utm_medium: input.default_utm_medium ?? null,
           default_utm_campaign: input.default_utm_campaign ?? null,
         },
-        uid,
+        profileId,
       );
       const { data, error } = await sb.from("campaigns").insert(body).select().maybeSingle();
       if (error) throw new Error(humanizeError(error));
       return data as Campaign | null;
     },
-    [uid],
+    [profileId],
   );
 
   const update = useCallback(async (id: string, patch: Partial<CampaignInput>) => {
@@ -239,19 +239,21 @@ export function useCampaigns() {
     }
     const sb = client();
     const body: Record<string, unknown> = {};
-    if (patch.name !== undefined) body.name = patch.name.trim();
-    if (patch.description !== undefined) body.description = patch.description;
+    if (patch.name !== undefined) body["name"] = patch.name.trim();
+    if (patch.description !== undefined) body["description"] = patch.description;
     if (patch.destination_url !== undefined) {
       if (!isValidHttpUrl(patch.destination_url)) throw new UrlFormatError("destination_url");
-      body.destination_url = patch.destination_url.trim();
+      body["destination_url"] = patch.destination_url.trim();
     }
-    if (patch.status !== undefined) body.status = patch.status;
-    if (patch.start_date !== undefined) body.start_date = patch.start_date;
-    if (patch.end_date !== undefined) body.end_date = patch.end_date;
-    if (patch.default_utm_source !== undefined) body.default_utm_source = patch.default_utm_source;
-    if (patch.default_utm_medium !== undefined) body.default_utm_medium = patch.default_utm_medium;
+    if (patch.status !== undefined) body["status"] = patch.status;
+    if (patch.start_date !== undefined) body["start_date"] = patch.start_date;
+    if (patch.end_date !== undefined) body["end_date"] = patch.end_date;
+    if (patch.default_utm_source !== undefined)
+      body["default_utm_source"] = patch.default_utm_source;
+    if (patch.default_utm_medium !== undefined)
+      body["default_utm_medium"] = patch.default_utm_medium;
     if (patch.default_utm_campaign !== undefined)
-      body.default_utm_campaign = patch.default_utm_campaign;
+      body["default_utm_campaign"] = patch.default_utm_campaign;
     const { data, error } = await sb
       .from("campaigns")
       .update(body)
@@ -267,14 +269,14 @@ export function useCampaigns() {
 
 export function useTrackingLinks() {
   const { user } = useAuth();
-  const uid = user?.auth_id ?? null;
+  const profileId = user?.id ?? null;
 
   const list = useCallback(
     async (opts?: {
       search?: string;
       status?: TrackingLinkStatus | "all";
-      affiliateId?: string;
-      campaignId?: string;
+      affiliateId?: string | undefined;
+      campaignId?: string | undefined;
     }) => {
       const sb = client();
       let q = sb.from("tracking_links").select("*").order("created_at", { ascending: false });
@@ -330,21 +332,21 @@ export function useTrackingLinks() {
           generated_url: generated,
           status: input.status ?? "active",
         },
-        uid,
+        profileId,
       );
       const { data, error } = await sb.from("tracking_links").insert(body).select().maybeSingle();
       if (error) throw new Error(humanizeError(error));
       return data as TrackingLink | null;
     },
-    [uid],
+    [profileId],
   );
 
   const update = useCallback(
     async (id: string, patch: { name?: string; status?: TrackingLinkStatus }) => {
       const sb = client();
       const body: Record<string, unknown> = {};
-      if (patch.name !== undefined) body.name = patch.name.trim();
-      if (patch.status !== undefined) body.status = patch.status;
+      if (patch.name !== undefined) body["name"] = patch.name.trim();
+      if (patch.status !== undefined) body["status"] = patch.status;
       const { data, error } = await sb
         .from("tracking_links")
         .update(body)

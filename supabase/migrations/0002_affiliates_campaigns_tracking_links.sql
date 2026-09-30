@@ -55,13 +55,13 @@
 -- ----------------------------------------------------------------------------
 DO $$
 BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_type t WHERE t.name = 'affiliate_status' AND t.typnamespace = ('public'::regnamespace)) THEN
+  IF NOT EXISTS (SELECT 1 FROM pg_type t WHERE t.typname = 'affiliate_status' AND t.typnamespace = ('public'::regnamespace)) THEN
     CREATE TYPE public.affiliate_status AS ENUM ('active', 'inactive', 'archived');
   END IF;
-  IF NOT EXISTS (SELECT 1 FROM pg_type t WHERE t.name = 'campaign_status' AND t.typnamespace = ('public'::regnamespace)) THEN
+  IF NOT EXISTS (SELECT 1 FROM pg_type t WHERE t.typname = 'campaign_status' AND t.typnamespace = ('public'::regnamespace)) THEN
     CREATE TYPE public.campaign_status AS ENUM ('draft', 'active', 'paused', 'archived');
   END IF;
-  IF NOT EXISTS (SELECT 1 FROM pg_type t WHERE t.name = 'tracking_link_status' AND t.typnamespace = ('public'::regnamespace)) THEN
+  IF NOT EXISTS (SELECT 1 FROM pg_type t WHERE t.typname = 'tracking_link_status' AND t.typnamespace = ('public'::regnamespace)) THEN
     CREATE TYPE public.tracking_link_status AS ENUM ('active', 'inactive', 'archived');
   END IF;
 END$$;

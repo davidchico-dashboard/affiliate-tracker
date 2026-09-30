@@ -1,6 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect } from "react";
 import { Eye } from "lucide-react";
 
 import { useAuth } from "@/lib/auth-context";
@@ -31,10 +30,6 @@ export function LoginRoute() {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  if (auth.status === "config-missing") {
-    return <ConfigMissing message={auth.configError ?? "Supabase is not configured."} />;
-  }
-
   // Redirect already-authenticated visitors away from the login page, in an
   // effect rather than during render.
   useEffect(() => {
@@ -42,6 +37,10 @@ export function LoginRoute() {
       void navigate({ to: "/", replace: true });
     }
   }, [auth.status, navigate]);
+
+  if (auth.status === "config-missing") {
+    return <ConfigMissing message={auth.configError ?? "Supabase is not configured."} />;
+  }
 
   if (auth.status === "authenticated") {
     return null;

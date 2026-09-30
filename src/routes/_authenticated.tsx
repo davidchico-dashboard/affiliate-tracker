@@ -1,4 +1,4 @@
-import { Outlet, createFileRoute } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 
 import { AuthGate } from "@/components/auth-gate";
 
@@ -7,9 +7,5 @@ export const Route = createFileRoute("/_authenticated")({
 });
 
 function AuthLayout() {
-  return (
-    <AuthGate>
-      <Outlet />
-    </AuthGate>
-  );
+  return <AuthGate />;
 }

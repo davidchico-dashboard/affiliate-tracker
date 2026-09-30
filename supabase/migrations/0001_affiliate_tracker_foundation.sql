@@ -65,10 +65,10 @@
 -- ----------------------------------------------------------------------------
 DO $$
 BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_type t WHERE t.name = 'system_role' AND t.typnamespace = ('public'::regnamespace)) THEN
+  IF NOT EXISTS (SELECT 1 FROM pg_type t WHERE t.typname = 'system_role' AND t.typnamespace = ('public'::regnamespace)) THEN
     CREATE TYPE public.system_role AS ENUM ('developer', 'admin', 'user');
   END IF;
-  IF NOT EXISTS (SELECT 1 FROM pg_type t WHERE t.name = 'user_status' AND t.typnamespace = ('public'::regnamespace)) THEN
+  IF NOT EXISTS (SELECT 1 FROM pg_type t WHERE t.typname = 'user_status' AND t.typnamespace = ('public'::regnamespace)) THEN
     CREATE TYPE public.user_status AS ENUM ('active', 'invited', 'disabled');
   END IF;
 END$$;
